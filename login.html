@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - E-Election University</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/voter.css">
+</head>
+<body>
+
+  <header class="official-header">
+    <div class="header-content">
+      <div class="brand-container">
+        <div class="logo-svg">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="#2563EB"/>
+            <path d="M8 11L11 14L16 8" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1>E-Election University</h1>
+      </div>
+      <span>Secure Login</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Portal Login</h2>
+        <p>Enter your credentials to continue</p>
+      </div>
+
+      <div id="statusBox" class="status-box"></div>
+
+      <div class="form-group">
+        <label for="logRoll">Roll Number / ID</label>
+        <input type="text" id="logRoll" placeholder="Enter your roll number" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label for="logPass">Password</label>
+        <input type="password" id="logPass" placeholder="Enter your password">
+      </div>
+
+      <button id="loginBtn" class="btn primary btn-block">Login</button>
+      
+      <div class="panel-footer">
+        <a href="register.html" class="small-link">Don't have an account? Register here</a>
+        <a href="index.html" class="small-link" style="margin-top: 8px;">Return to Home</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/utils.js"></script>
+
+  <script>
+    const loginBtn = document.getElementById('loginBtn');
+    const statusBox = document.getElementById('statusBox');
+    const logRoll = document.getElementById('logRoll');
+    const logPass = document.getElementById('logPass');
+    
+    let pendingCheckInterval = null; // Variable to hold the timer
+
+    function resetButton() {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Login';
+    }
+
+    // Function to stop checking if user leaves page
+    window.addEventListener('beforeunload', () => {
+      if (pendingCheckInterval) clearInterval(pendingCheckInterval);
+    });
+
+    loginBtn.addEventListener('click', async () => {
+      const roll_no = logRoll.value.trim();
+      const password = logPass.value.trim();
+
+      if (!roll_no || !password) {
+        statusBox.textContent = 'Please enter both Roll Number and Password.';
+        statusBox.className = 'status-box error';
+        return;
+      }
+
+      if (pendingCheckInterval) clearInterval(pendingCheckInterval);
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Verifying...';
+      statusBox.className = 'status-box';
+      
+      try {
+        const { data, error } = await _supabase
+          .from('users')
+          .select('*')
+          .eq('roll_no', roll_no)
+          .eq('password', password)
+          .single();
+
+        if (error || !data) {
+          statusBox.textContent = 'Invalid Roll Number or Password.';
+          statusBox.className = 'status-box error';
+          resetButton();
+          return;
+        }
+
+        if (data.status === 'rejected') {
+          statusBox.textContent = 'Your registration request was rejected by the Admin.';
+          statusBox.className = 'status-box error';
+          resetButton();
+          return;
+        }
+
+        // --- AUTO-CHECK LOGIC FOR PENDING USERS ---
+        if (data.status === 'pending') {
+          statusBox.innerHTML = 'Your account is pending approval. <br><br><strong>Please keep this page open.</strong> We will automatically log you in once the Admin approves your request. <span id="pollingDots">...</span>';
+          statusBox.className = 'status-box warn';
+          
+          // Start checking every 4 seconds
+          pendingCheckInterval = setInterval(async () => {
+            const { data: checkData, error: checkError } = await _supabase
+              .from('users')
+              .select('*')
+              .eq('roll_no', roll_no)
+              .eq('password', password)
+              .single();
+              
+            if (checkData && checkData.status === 'approved') {
+              clearInterval(pendingCheckInterval);
+              statusBox.innerHTML = 'Account Approved! Logging you in...';
+              statusBox.className = 'status-box success';
+              setTimeout(() => loginBtn.click(), 800); // Auto trigger login
+            } else if (checkData && checkData.status === 'rejected') {
+              clearInterval(pendingCheckInterval);
+              statusBox.textContent = 'Your registration was rejected.';
+              statusBox.className = 'status-box error';
+              resetButton();
+            }
+          }, 4000);
+
+          resetButton(); // Re-enable button in case they want to try another account
+          return;
+        }
+
+        // --- LOGIN SUCCESS LOGIC ---
+        if (data.role === 'candidate') {
+          sessionStorage.setItem('ev_candidate_id', data.id);
+          sessionStorage.setItem('ev_candidate_name', data.name);
+          window.location.href = 'candidate.html';
+        } else {
+          const { data: voteData } = await _supabase
+            .from('votes')
+            .select('id')
+            .eq('voter_roll_no', roll_no);
+
+          if (voteData && voteData.length > 0) {
+            statusBox.textContent = 'Our records show you have already cast your vote.';
+            statusBox.className = 'status-box error';
+            resetButton();
+            return;
+          }
+
+          sessionStorage.setItem('ev_voter_roll', data.roll_no);
+          sessionStorage.setItem('ev_voter_name', data.name);
+          window.location.href = 'vote.html';
+        }
+
+      } catch (err) {
+        statusBox.textContent = 'A network error occurred. Please try again.';
+        statusBox.className = 'status-box error';
+        resetButton();
+      }
+    });
+
+    logPass.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') loginBtn.click();
+    });
+  </script>
+</body>
+</html>

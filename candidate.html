@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate Dashboard - E-Election University</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/voter.css">
+  <style>
+    .vote-stat-box {
+      text-align: center;
+      padding: 30px 20px;
+      background-color: var(--bg-color);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin: 20px 0;
+    }
+    .vote-count {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+    .vote-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="official-header">
+    <div class="header-content">
+      <div class="brand-container">
+        <div class="logo-svg">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="#2563EB"/>
+            <path d="M8 11L11 14L16 8" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1>E-Election University</h1>
+      </div>
+      <span>Candidate Dashboard</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="panel wide-panel" style="max-width: 500px;">
+      <div class="panel-header" style="text-align: center;">
+        <h2 id="candName">Loading...</h2>
+        <p>Candidate Portal</p>
+      </div>
+
+      <div id="statusBox" class="status-box warn" style="display: block;">
+        Fetching live data from secure server...
+      </div>
+
+      <div id="statsContainer" style="display: none;">
+        <div class="vote-stat-box">
+          <div class="vote-count" id="myVotes">0</div>
+          <div class="vote-label">Votes Received</div>
+        </div>
+        
+        <div style="text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+          Election Status: <strong id="electionStatus">Setup</strong>
+        </div>
+      </div>
+
+      <div class="action-footer" style="margin-top: 20px;">
+        <button id="refreshBtn" class="btn primary btn-block">Refresh Vote Count</button>
+        <button id="logoutBtn" class="btn secondary btn-block" style="margin-top: 10px;">Logout</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/utils.js"></script>
+
+  <script>
+    const candId = sessionStorage.getItem('ev_candidate_id');
+    const candName = sessionStorage.getItem('ev_candidate_name');
+
+    if (!candId) {
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('candName').textContent = candName;
+
+    async function loadStats() {
+      const statusBox = document.getElementById('statusBox');
+      const statsContainer = document.getElementById('statsContainer');
+      
+      const { data: settings } = await _supabase.from('settings').select('status').eq('id', 1).single();
+      document.getElementById('electionStatus').textContent = settings.status.toUpperCase();
+
+      const { data: votes, error } = await _supabase
+        .from('votes')
+        .select('id')
+        .eq('candidate_id', candId);
+
+      if (error) {
+        statusBox.textContent = 'Error fetching data.';
+        statusBox.className = 'status-box error';
+        return;
+      }
+
+      document.getElementById('myVotes').textContent = votes.length;
+      statusBox.style.display = 'none';
+      statsContainer.style.display = 'block';
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      document.getElementById('refreshBtn').textContent = 'Refreshing...';
+      loadStats().then(() => {
+        document.getElementById('refreshBtn').textContent = 'Refresh Vote Count';
+      });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionStorage.removeItem('ev_candidate_id');
+      sessionStorage.removeItem('ev_candidate_name');
+      window.location.href = 'login.html';
+    });
+
+    loadStats();
+  </script>
+</body>
+</html>

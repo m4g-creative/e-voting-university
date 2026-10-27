@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cast Your Vote - E-Election University</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/voter.css">
+</head>
+<body>
+
+  <header class="official-header">
+    <div class="header-content">
+      <div class="brand-container">
+        <div class="logo-svg">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="#2563EB"/>
+            <path d="M8 11L11 14L16 8" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1>E-Election University</h1>
+      </div>
+      <span>Official Ballot</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="panel wide-panel">
+      <div class="panel-header">
+        <h2>Official Ballot</h2>
+        <p id="voterInfo">Verifying voter...</p>
+      </div>
+
+      <div id="statusBox" class="status-box"></div>
+
+      <div class="instruction-box">
+        <p>Select exactly one candidate from the list below. Review your selection carefully before confirming. Once cast, your vote cannot be changed.</p>
+      </div>
+
+      <div id="ballotList" class="ballot-list">
+        <p style="text-align: center; color: var(--text-muted);">Loading candidates...</p>
+      </div>
+
+      <div class="action-footer">
+        <button id="confirmBtn" class="btn primary btn-block" disabled>Confirm & Cast Vote</button>
+        <!-- Yahan direct onclick lagaya hai taake hamesha kaam kare -->
+        <button id="cancelBtn" class="btn secondary btn-block" style="margin-top: 10px;" onclick="exitVoting()">Cancel & Exit</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Exit Function (Direct HTML Script) -->
+  <script>
+    function exitVoting() {
+      sessionStorage.removeItem('ev_voter_roll');
+      sessionStorage.removeItem('ev_voter_name');
+      window.location.href = 'login.html';
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ballot.js"></script>
+</body>
+</html>
