@@ -1,0 +1,48 @@
+l<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cast Your Vote - E-Election University</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/voter.css">
+</head>
+<body>
+
+  <header class="official-header">
+    <div class="header-content">
+      <h1>E-Election University</h1>
+      <span>Official Ballot</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="panel wide-panel">
+      <div class="panel-header">
+        <h2>Official Ballot</h2>
+        <p id="voterInfo">Verifying voter...</p>
+      </div>
+
+      <div id="statusBox" class="status-box"></div>
+
+      <div class="instruction-box">
+        <p>Select exactly one candidate from the list below. Review your selection carefully before confirming. Once cast, your vote cannot be changed.</p>
+      </div>
+
+      <div id="ballotList" class="ballot-list">
+        <p style="text-align: center; color: var(--text-muted);">Loading candidates from secure server...</p>
+      </div>
+
+      <div class="action-footer">
+        <button id="confirmBtn" class="btn primary btn-block" disabled>Confirm & Cast Vote</button>
+        <button id="cancelBtn" class="btn secondary btn-block" style="margin-top: 10px;">Cancel & Exit</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ballot.js"></script>
+</body>
+</html>
