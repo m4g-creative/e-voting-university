@@ -40,12 +40,19 @@
         <input type="password" id="regPass" placeholder="Create a password">
       </div>
 
+      <!-- NAYA CUSTOM ROLE SELECTOR -->
       <div class="form-group">
-        <label for="regRole">Register As</label>
-        <select id="regRole">
-          <option value="voter">Voter</option>
-          <option value="candidate">Candidate</option>
-        </select>
+        <label>Register As</label>
+        <div class="custom-radio-group">
+          <label class="custom-radio-label selected" id="lbl-voter">
+            <input type="radio" name="regRole" value="voter" checked>
+            Voter
+          </label>
+          <label class="custom-radio-label" id="lbl-candidate">
+            <input type="radio" name="regRole" value="candidate">
+            Candidate
+          </label>
+        </div>
       </div>
 
       <button id="registerBtn" class="btn primary btn-block">Submit Request</button>
@@ -63,12 +70,23 @@
   <script>
     const registerBtn = document.getElementById('registerBtn');
     const statusBox = document.getElementById('statusBox');
+    
+    // Custom Radio Logic (Styling on click)
+    const radioLabels = document.querySelectorAll('.custom-radio-label');
+    radioLabels.forEach(label => {
+      label.addEventListener('click', () => {
+        radioLabels.forEach(l => l.classList.remove('selected'));
+        label.classList.add('selected');
+      });
+    });
 
     registerBtn.addEventListener('click', async () => {
       const name = document.getElementById('regName').value.trim();
       const roll_no = document.getElementById('regRoll').value.trim();
       const password = document.getElementById('regPass').value.trim();
-      const role = document.getElementById('regRole').value;
+      
+      // Naya tareeqa role nikalne ka (radio button se)
+      const role = document.querySelector('input[name="regRole"]:checked').value;
 
       if (!name || !roll_no || !password) {
         statusBox.textContent = 'Please fill all fields.';
@@ -99,4 +117,4 @@
     });
   </script>
 </body>
-</html>
+          </html>
